@@ -1,9 +1,9 @@
-import Generate.UserGenerator;
-import Models.Order;
-import Models.User;
-import Models.UserCreds;
-import Users.OrderUser;
-import Users.UserActions;
+import generate.UserGenerator;
+import models.Order;
+import models.User;
+import models.UserCreds;
+import users.OrderUser;
+import users.UserActions;
 import io.qameta.allure.Description;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -28,6 +29,7 @@ public class GetOrderTest {
         orderUser = new OrderUser();
 
         User testUser = UserGenerator.randomUser();
+
         Response createResponse = userActions.create(testUser);
 
         createResponse.then().statusCode(200);
@@ -45,7 +47,9 @@ public class GetOrderTest {
     @Description("Успешное получение заказа с авторизацией")
     public void getOrderWithAuth() {
 
-        Order order = new Order(List.of("6acef97852135b001b21a32e"));
+        List <String> ingredientIds = userActions.getValidIngredientIds();
+
+        Order order = new Order(List.of(ingredientIds.get(0)));
         Response createResponse = orderUser.createOrder(order, authToken);
         createResponse.then().statusCode(200);
 
@@ -63,8 +67,9 @@ public class GetOrderTest {
     @Test
     @Description("Получение заказа без авторизации")
     public void getOrderWithoutAuth() {
+        List <String> ingredientIds = userActions.getValidIngredientIds();
 
-        Order order = new Order(List.of("6acef97852135b001b21a32e"));
+        Order order = new Order(List.of(ingredientIds.get(0)));
         Response createResponse = orderUser.createOrder(order, authToken);
         createResponse.then().statusCode(200);
 
@@ -80,7 +85,9 @@ public class GetOrderTest {
     @AfterEach
     public void tearDown() {
         if (authToken != null) {
-            userActions.deleteUser(authToken)
+            given()
+                    .header("Authorization", authToken)
+                    .delete("https://qa-stellarburgers.education-services.ru/api/auth/user")
                     .then()
                     .statusCode(202);
         }

@@ -1,13 +1,14 @@
-import Generate.UserGenerator;
-import Models.User;
-import Models.UserCreds;
-import Users.UserActions;
+import generate.UserGenerator;
+import models.User;
+import models.UserCreds;
+import users.UserActions;
 import io.qameta.allure.Description;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -56,12 +57,13 @@ public class AuthorizationTest {
 
     @AfterEach
     public void tearDown() {
-        if (testUser.getAccessToken() != null) {
-            userActions.deleteUser(testUser.getAccessToken())
+        if (testUser != null && testUser.getAccessToken() != null) {
+            given()
+                    .header("Authorization", testUser.getAccessToken())
+                    .delete("https://qa-stellarburgers.education-services.ru/api/auth/user")
                     .then()
-                    .statusCode(200);
+                    .statusCode(202);
         }
-
     }
 }
 

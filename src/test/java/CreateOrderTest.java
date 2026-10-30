@@ -1,9 +1,9 @@
-import Generate.UserGenerator;
-import Models.Order;
-import Models.User;
-import Models.UserCreds;
-import Users.OrderUser;
-import Users.UserActions;
+import generate.UserGenerator;
+import models.Order;
+import models.User;
+import models.UserCreds;
+import users.OrderUser;
+import users.UserActions;
 import io.qameta.allure.Description;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
@@ -17,6 +17,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,11 +48,16 @@ public class CreateOrderTest {
 
 
     private static Stream<Arguments> provideIngredients() {
+
+        List <String> ingredientIds = given()
+                .get("https://qa-stellarburgers.education-services.ru/api/ingredients")
+                .jsonPath().getList("data._id", String.class);
+
+
         return Stream.of(
-                Arguments.of(List.of("6acef97852135b001b21a32e", "6acef97852135b001b21a332")),
-                Arguments.of(List.of("6acef97852135b001b21a333")),
-                Arguments.of(List.of("6acef97852135b001b21a334", "6acef97852135b001b21a335", "6acef97852135b001b21a336"))
-        );
+                Arguments.of(List.of(ingredientIds.get(0), ingredientIds.get(1))),
+                Arguments.of(List.of(ingredientIds.get(2), ingredientIds.get(3))),
+                Arguments.of(List.of(ingredientIds.get(4))));
 
     }
 
@@ -101,7 +107,11 @@ public class CreateOrderTest {
     @Description("Проверка создания заказа без авторизации")
     @Disabled("Метод POST /api/orders упорно возвращает 200 вместо 401. Проверено также на сайте через нетворк")
     public void testCreateOrderWithoutAuth() {
-        Order order = new Order(List.of("6acef97852135b001b21a32e"));
+        List<String> ingredientIds = given()
+                .get("https://qa-stellarburgers.education-services.ru/api/ingredients")
+                .jsonPath().getList("data._id", String.class);
+
+        Order order = new Order(List.of(ingredientIds.get(4)));
         Response response = orderUser.createOrderWithoutAuth(order);
 
         response.then().statusCode(401);
@@ -112,7 +122,9 @@ public class CreateOrderTest {
     @AfterEach
     public void tearDown() {
         if (authToken != null) {
-            userActions.deleteUser(authToken)
+            given()
+                    .header("Authorization", authToken)
+                    .delete("https://qa-stellarburgers.education-services.ru/api/auth/user")
                     .then()
                     .statusCode(202);
         }

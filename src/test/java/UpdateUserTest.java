@@ -1,6 +1,6 @@
-import Generate.UserGenerator;
-import Models.User;
-import Users.UserActions;
+import generate.UserGenerator;
+import models.User;
+import users.UserActions;
 import io.qameta.allure.Description;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
