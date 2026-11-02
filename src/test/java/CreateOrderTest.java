@@ -48,13 +48,10 @@ public class CreateOrderTest {
 
 
     private static Stream<Arguments> provideIngredients() {
+        UserActions temporaryActions = new UserActions();
+        List <String> ingredientIds = temporaryActions.getValidIngredientIds();
 
-        List <String> ingredientIds = given()
-                .get("https://qa-stellarburgers.education-services.ru/api/ingredients")
-                .jsonPath().getList("data._id", String.class);
-
-
-        return Stream.of(
+                return Stream.of(
                 Arguments.of(List.of(ingredientIds.get(0), ingredientIds.get(1))),
                 Arguments.of(List.of(ingredientIds.get(2), ingredientIds.get(3))),
                 Arguments.of(List.of(ingredientIds.get(4))));
@@ -122,11 +119,7 @@ public class CreateOrderTest {
     @AfterEach
     public void tearDown() {
         if (authToken != null) {
-            given()
-                    .header("Authorization", authToken)
-                    .delete("https://qa-stellarburgers.education-services.ru/api/auth/user")
-                    .then()
-                    .statusCode(202);
+            userActions.deleteUser(authToken).then().statusCode(202);
         }
     }
         }

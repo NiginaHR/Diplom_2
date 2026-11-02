@@ -8,7 +8,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -24,6 +23,12 @@ public class AuthorizationTest {
 
         testUser = UserGenerator.randomUser();
         userActions.create(testUser).then().statusCode(200);
+        UserCreds creds = new UserCreds()
+                .setEmail(testUser.getEmail())
+                .setPassword(testUser.getPassword());
+        Response loginResponse = userActions.login(creds);
+        loginResponse.then().statusCode(200);
+        testUser.setAccessToken(loginResponse.jsonPath().getString("accessToken"));
 
     }
 
@@ -58,11 +63,8 @@ public class AuthorizationTest {
     @AfterEach
     public void tearDown() {
         if (testUser != null && testUser.getAccessToken() != null) {
-            given()
-                    .header("Authorization", testUser.getAccessToken())
-                    .delete("https://qa-stellarburgers.education-services.ru/api/auth/user")
-                    .then()
-                    .statusCode(202);
+            userActions.deleteUser(testUser.getAccessToken()).then().statusCode(202);
+
         }
     }
 }
